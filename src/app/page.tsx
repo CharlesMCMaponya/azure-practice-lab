@@ -40,11 +40,15 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col items-center justify-center gap-6 pt-4 w-full">
-            <button className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-sm">
+            {/* The working link to the quiz page */}
+            <Link 
+              href="/quiz" 
+              className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-sm text-center inline-block"
+            >
               Start Practicing
-            </button>
+            </Link>
             
-            {/* The new Upload Component */}
+            {/* The PDF Upload Component */}
             <UploadForm />
           </div>
         </div>
