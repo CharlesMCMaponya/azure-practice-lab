@@ -1,4 +1,5 @@
 import Link from "next/link";
+import UploadForm from "./UploadForm";
 
 export default function Home() {
   return (
@@ -38,13 +39,13 @@ export default function Home() {
             Practice with quizzes, flashcards, and timed assessments designed to help you pass on the first try.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+          <div className="flex flex-col items-center justify-center gap-6 pt-4 w-full">
             <button className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors shadow-sm">
               Start Practicing
             </button>
-            <button className="w-full sm:w-auto px-8 py-3.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-lg transition-colors shadow-sm">
-              Upload PDF
-            </button>
+            
+            {/* The new Upload Component */}
+            <UploadForm />
           </div>
         </div>
       </main>

@@ -4,6 +4,8 @@ import { extractQuestionsFromPdf } from '@/services/pdfParser';
 
 const prisma = new PrismaClient();
 
+export const runtime = 'nodejs';
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -13,17 +15,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    // Convert the File object to a Buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // 1. Parse the PDF
+    console.log("Starting extraction on server...");
     const questions = await extractQuestionsFromPdf(buffer);
+    console.log(`Extracted ${questions.length} questions.`);
 
-    // 2. Save to Database
     let savedCount = 0;
     for (const q of questions) {
-      // Check if it already exists to prevent duplicates
       const existing = await prisma.question.findFirst({
         where: { sourceId: q.sourceId }
       });
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
             optionD: q.optionD,
             correctAnswers: q.correctAnswers,
             explanation: q.explanation,
-            isVerified: false, // Needs admin review later
+            isVerified: false,
           }
         });
         savedCount++;
@@ -53,8 +53,11 @@ export async function POST(req: NextRequest) {
       newQuestionsSaved: savedCount 
     });
 
-  } catch (error) {
-    console.error('Upload error:', error);
-    return NextResponse.json({ error: 'Failed to process PDF' }, { status: 500 });
+  } catch (error: any) {
+    console.error('--- UPLOAD ERROR ---', error);
+    return NextResponse.json({ 
+      error: 'Failed to process PDF', 
+      details: error.message 
+    }, { status: 500 });
   }
 }
