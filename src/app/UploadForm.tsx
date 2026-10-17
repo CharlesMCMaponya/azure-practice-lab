@@ -32,7 +32,20 @@ export default function UploadForm() {
         body: formData,
       });
 
-      const data = await response.json();
+      // Safely read the response as text first
+      const text = await response.text();
+      let data;
+
+      try {
+        // Try to parse it as JSON
+        data = JSON.parse(text);
+      } catch (e) {
+        // If it fails, it's likely a plain text error from the host (like Vercel's 413 Payload Too Large)
+        if (text.includes("Request Entity Too Large") || response.status === 413) {
+           throw new Error("The PDF is too large for the cloud server. Please try a smaller file.");
+        }
+        throw new Error("Server returned an unexpected response. Please try again.");
+      }
 
       if (!response.ok) {
         throw new Error(data.details || data.error || "Upload failed");
@@ -67,7 +80,7 @@ export default function UploadForm() {
         disabled={!file || isUploading}
         className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold rounded-lg transition-colors"
       >
-        {isUploading ? "Processing PDF (This takes ~15s)..." : "Upload & Process"}
+        {isUploading ? "Processing PDF..." : "Upload & Process"}
       </button>
 
       {result && (
