@@ -2,24 +2,29 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface Question {
   id: string;
+  sourceId: string;
   questionText: string;
   optionA: string;
   optionB: string;
   optionC: string;
   optionD: string;
   correctAnswers: string;
+  explanation?: string;
 }
 
 export default function QuizPage() {
+  const router = useRouter();
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [score, setScore] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [answers, setAnswers] = useState<any[]>([]);
 
   useEffect(() => {
     fetch("/api/questions")
@@ -31,8 +36,8 @@ export default function QuizPage() {
       .catch((err) => console.error(err));
   }, []);
 
-  if (isLoading) return <div className="p-10 text-center font-medium">Loading 10 random questions...</div>;
-  if (questions.length === 0) return <div className="p-10 text-center">No questions found. Please import a PDF first.</div>;
+  if (isLoading) return <div className="p-10 text-center font-medium text-slate-600">Loading your quiz...</div>;
+  if (questions.length === 0) return <div className="p-10 text-center text-slate-600">No questions found. Please import a PDF first.</div>;
 
   const currentQuestion = questions[currentIndex];
   const correctAnswer = JSON.parse(currentQuestion.correctAnswers)[0];
@@ -42,9 +47,20 @@ export default function QuizPage() {
     setSelectedAnswer(option);
     setIsAnswered(true);
 
-    if (option === correctAnswer) {
+    const isCorrect = option === correctAnswer;
+    if (isCorrect) {
       setScore((prev) => prev + 1);
     }
+
+    setAnswers((prev) => [
+      ...prev,
+      {
+        question: currentQuestion,
+        selected: option,
+        correct: correctAnswer,
+        isCorrect
+      }
+    ]);
   };
 
   const handleNext = () => {
@@ -53,8 +69,12 @@ export default function QuizPage() {
       setSelectedAnswer(null);
       setIsAnswered(false);
     } else {
-      alert(`Quiz Complete! Your score: ${score} / ${questions.length}`);
-      window.location.href = "/"; // Go back home
+      localStorage.setItem("quizResults", JSON.stringify({
+        score,
+        total: questions.length,
+        answers
+      }));
+      router.push("/results");
     }
   };
 
@@ -82,7 +102,7 @@ export default function QuizPage() {
             if (!isAnswered) {
               buttonClass += "border-slate-200 hover:border-blue-400 hover:bg-blue-50 cursor-pointer";
             } else if (letter === correctAnswer) {
-              buttonClass += "border-green-500 bg-green-50";
+              buttonClass += "border-emerald-500 bg-emerald-50";
             } else if (letter === selectedAnswer && letter !== correctAnswer) {
               buttonClass += "border-red-500 bg-red-50";
             } else {
@@ -109,16 +129,11 @@ export default function QuizPage() {
               onClick={handleNext}
               className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
             >
-              {currentIndex === questions.length - 1 ? "Finish Quiz" : "Next Question"}
+              {currentIndex === questions.length - 1 ? "See Results" : "Next Question"}
             </button>
           </div>
         )}
-
       </div>
-      
-      <Link href="/" className="mt-8 text-slate-500 hover:text-blue-600 underline">
-        Return to Home
-      </Link>
     </div>
   );
 }
